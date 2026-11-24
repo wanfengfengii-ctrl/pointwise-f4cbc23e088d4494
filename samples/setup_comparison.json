@@ -1,0 +1,25 @@
+{
+  "single": {
+    "run_id": "SETUP-SINGLE",
+    "main": [["A", 0, 0], ["H", 10, 0], ["B", 20, 0]],
+    "secondary": [["U", 0, 0], ["X", 9, 0], ["Y", 11, 4], ["V", 20, 0]],
+    "public": ["A", "B"],
+    "revisions": [
+      {"name": "first", "window": [1, 1], "readings": {}},
+      {"name": "second", "window": [1, 1], "readings": {"H": 4}},
+      {"name": "third", "window": [1, 1], "readings": {}},
+      {"name": "left", "window": [1, 0], "readings": {}},
+      {"name": "right", "window": [0, 1], "readings": {"H": 4}}
+    ]
+  },
+  "double": {
+    "run_id": "SETUP-DOUBLE",
+    "main": [["A", 0, 0], ["P", 10, 0], ["M", 20, 0], ["Q", 30, 0], ["B", 40, 0]],
+    "secondary": [["U", 0, 0], ["L", 9, 0], ["R", 11, 4], ["T", 20, 0], ["F", 29, 0], ["G", 31, 4], ["V", 40, 0]],
+    "public": ["A", "M", "B"],
+    "revisions": [
+      {"name": "first", "window": [1, 1], "readings": {}},
+      {"name": "second", "window": [1, 1], "readings": {"P": 4, "Q": 4}}
+    ]
+  }
+}
