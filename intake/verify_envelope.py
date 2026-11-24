@@ -8,6 +8,7 @@ class VerifiedEnvelope:
     registration: IssueRegistration
     wire: bytes
     body: bytes
+    version: int
 
 
 def verify_envelope(wire: bytes, registration: IssueRegistration) -> VerifiedEnvelope:
@@ -23,4 +24,4 @@ def verify_envelope(wire: bytes, registration: IssueRegistration) -> VerifiedEnv
         raise ValueError('packet does not match the issue registration')
     if body_digest(envelope.body) != registration.body_sha256:
         raise ValueError('packet body digest mismatch')
-    return VerifiedEnvelope(registration, wire, envelope.body)
+    return VerifiedEnvelope(registration, wire, envelope.body, envelope.version)

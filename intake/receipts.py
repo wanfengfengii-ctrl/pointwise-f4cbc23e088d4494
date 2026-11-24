@@ -1,9 +1,10 @@
 import sqlite3
 from dataclasses import dataclass
 
+from intake.verify_comparison import VerifiedComparison, verify_comparison_body
 from intake.verify_envelope import VerifiedEnvelope, verify_envelope
 from intake.verify_evidence import VerifiedEvidence, verify_evidence
-from issue.envelope import IssueRegistration
+from issue.envelope import V1, V2, IssueRegistration
 
 
 @dataclass(frozen=True, slots=True)
@@ -11,7 +12,9 @@ class Receipt:
     receipt_id: int
     registration: IssueRegistration
     wire: bytes
-    evidence: VerifiedEvidence
+    version: int
+    evidence: VerifiedEvidence | None
+    comparison: VerifiedComparison | None
 
 
 class ReceiptStore:
@@ -58,4 +61,12 @@ class ReceiptStore:
         issue_id, run_id, revision_id, digest, wire = row
         registration = IssueRegistration(issue_id, run_id, revision_id, digest)
         verified = verify_envelope(wire, registration)
-        return Receipt(receipt_id, registration, wire, verify_evidence(verified))
+        evidence = None
+        comparison = None
+        if verified.version == V1:
+            evidence = verify_evidence(verified)
+        elif verified.version == V2:
+            comparison = verify_comparison_body(verified)
+        else:  # pragma: no cover - envelope verification rejects other versions
+            raise ValueError('unsupported packet version')
+        return Receipt(receipt_id, registration, wire, verified.version, evidence, comparison)

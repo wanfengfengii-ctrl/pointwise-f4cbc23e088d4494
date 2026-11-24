@@ -5,10 +5,13 @@ from dataclasses import dataclass
 
 
 V1 = 1
+V2 = 2
+SUPPORTED_VERSIONS = (V1, V2)
 
 
 @dataclass(frozen=True, slots=True)
 class PacketEnvelope:
+    version: int
     issue_id: int
     body_sha256: str
     body: bytes
@@ -26,11 +29,13 @@ def body_digest(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def seal_envelope(issue_id: int, body: bytes) -> bytes:
+def seal_envelope(issue_id: int, body: bytes, version: int = V1) -> bytes:
     if type(issue_id) is not int or not 0 < issue_id < 2**63 or type(body) is not bytes:
         raise ValueError('invalid issue id or body')
+    if version not in SUPPORTED_VERSIONS:
+        raise ValueError('unsupported envelope version')
     fields = {
-        'version': V1,
+        'version': version,
         'issue_id': issue_id,
         'sha256': body_digest(body),
         'body': base64.b64encode(body).decode('ascii'),
@@ -42,8 +47,9 @@ def read_envelope(wire: bytes) -> PacketEnvelope:
     fields = read_json_object(wire)
     if fields.keys() != {'version', 'issue_id', 'sha256', 'body'}:
         raise ValueError('invalid envelope fields')
-    if type(fields['version']) is not int or fields['version'] != V1:
+    if type(fields['version']) is not int or fields['version'] not in SUPPORTED_VERSIONS:
         raise ValueError('unsupported envelope version')
+    version = fields['version']
     issue_id = fields['issue_id']
     if type(issue_id) is not int or not 0 < issue_id < 2**63:
         raise ValueError('invalid envelope issue id')
@@ -53,7 +59,7 @@ def read_envelope(wire: bytes) -> PacketEnvelope:
     encoded = fields['body']
     if type(encoded) is not str:
         raise ValueError('invalid encoded body')
-    return PacketEnvelope(issue_id, digest, base64.b64decode(encoded, validate=True))
+    return PacketEnvelope(version, issue_id, digest, base64.b64decode(encoded, validate=True))
 
 
 def read_json_object(wire: bytes) -> dict:
